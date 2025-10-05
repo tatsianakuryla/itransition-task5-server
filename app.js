@@ -20,6 +20,7 @@ app.get('/', (request, response) => {
 });
 
 app.get('/users', Api.getUsers);
+app.post('/login', Api.login);
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}/`);
