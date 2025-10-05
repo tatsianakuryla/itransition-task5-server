@@ -21,7 +21,7 @@ app.get('/', (request, response) => {
 
 app.get('/users', Api.getUsers);
 app.post('/login', Api.login);
-app.post('/register', Api.register);
+app.post('/users', Api.create);
 app.delete('/users', Api.deleteMany);
 app.patch('/users', Api.updateStatusMany);
 app.delete('/users/unverified', Api.deleteManyUnverified);

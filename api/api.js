@@ -3,7 +3,7 @@ const { Hash } = require("../hash/hash");
 const { UNIQUE_VALUE_ERROR_CODE } = require("../constants/constants");
 const prisma = new PrismaClient();
 
-class Api {
+class UsersApi {
     static getUsers = async (request, response) => {
         try {
             const users = await prisma.user.findMany();
@@ -17,6 +17,9 @@ class Api {
         try {
             const { email, password } = request.body;
             const user = await prisma.user.findUnique({ where: { email } });
+            if (user.status === "BLOCKED") {
+                return response.status(401).json({ error: 'User is blocked' });
+            }
             if (!user || user.password !== Hash.get(password)) {
                 return response.status(401).json({ error: 'Invalid email or password' });
             }
@@ -26,7 +29,7 @@ class Api {
         }
     }
 
-    static register = async (request, response) => {
+    static create = async (request, response) => {
         const { name, email, password } = request.body;
         const passwordHash = Hash.get(password);
         try {
@@ -80,4 +83,4 @@ class Api {
     }
 }
 
-exports.Api = Api;
+exports.Api = UsersApi;
