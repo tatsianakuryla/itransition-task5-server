@@ -1,7 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { Hash } = require("../hash/hash");
 const { UNIQUE_VALUE_ERROR_CODE } = require("../constants/constants");
-const {request} = require("express");
 const prisma = new PrismaClient();
 
 class Api {
@@ -52,6 +51,15 @@ class Api {
         try {
             const { ids } = request.body;
             const count = await prisma.user.deleteMany({ where: { id: { in: ids } } });
+            response.json({ message: 'Users was successfully deleted', count: count.count });
+        } catch (error) {
+            response.status(500).json({ error: error.message });
+        }
+    }
+
+    static deleteManyUnverified = async (request, response) => {
+        try {
+            const count = await prisma.user.deleteMany({ where: { status: "UNVERIFIED" } });
             response.json({ message: 'Users was successfully deleted', count: count.count });
         } catch (error) {
             response.status(500).json({ error: error.message });

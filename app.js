@@ -24,6 +24,7 @@ app.post('/login', Api.login);
 app.post('/register', Api.register);
 app.delete('/users', Api.deleteMany);
 app.patch('/users', Api.updateStatusMany);
+app.delete('/users/unverified', Api.deleteManyUnverified);
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}/`);
