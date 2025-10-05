@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { Hash } = require("../hash/hash");
 const { UNIQUE_VALUE_ERROR_CODE } = require("../constants/constants");
+const {request} = require("express");
 const prisma = new PrismaClient();
 
 class Api {
@@ -49,9 +50,22 @@ class Api {
 
     static deleteMany = async (request, response) => {
         try {
-            const { id } = request.body;
-            await prisma.user.deleteMany({ where: { id } });
-            response.json({ message: 'User was successfully deleted'});
+            const { ids } = request.body;
+            const count = await prisma.user.deleteMany({ where: { id: { in: ids } } });
+            response.json({ message: 'Users was successfully deleted', count: count.count });
+        } catch (error) {
+            response.status(500).json({ error: error.message });
+        }
+    }
+
+    static updateStatusMany = async (request, response) => {
+        try {
+            const { ids, status } = request.body;
+            const update = await prisma.user.updateMany({
+                where: { id: { in: ids } },
+                data: { status },
+            });
+            response.json(update);
         } catch (error) {
             response.status(500).json({ error: error.message });
         }
