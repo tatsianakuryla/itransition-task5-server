@@ -2,6 +2,7 @@ const express = require('express');
 const { Api } = require('./api/api');
 const app = express();
 const PORT = process.env.PORT || 3000;
+require('dotenv').config();
 
 app.use(express.json());
 
