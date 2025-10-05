@@ -46,6 +46,16 @@ class Api {
             }
         }
     }
+
+    static deleteMany = async (request, response) => {
+        try {
+            const { id } = request.body;
+            await prisma.user.deleteMany({ where: { id } });
+            response.json({ message: 'User was successfully deleted'});
+        } catch (error) {
+            response.status(500).json({ error: error.message });
+        }
+    }
 }
 
 exports.Api = Api;
