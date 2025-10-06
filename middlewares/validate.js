@@ -10,7 +10,7 @@ function validate (schema) {
                 return response.status(400).json(
                     {
                         error: "Validation error",
-                        issues: error.issues.map(i => ({ path: i.path.join("."), message: i.message })),
+                        issues: error.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
                     }
                 );
             }
