@@ -37,7 +37,10 @@ const UpdateStatusManySchema = zod.object({
     status: StatusEnum,
 });
 
+const RefreshSchema = zod.object({ refreshToken: zod.string().min(1, 'Refresh token is required')});
+
 module.exports = {
+    RefreshSchema,
     LoginSchema,
     RegisterSchema,
     DeleteManySchema,
