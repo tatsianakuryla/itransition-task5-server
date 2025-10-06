@@ -1,49 +1,45 @@
-import { z } from "zod";
+const zod = require('zod');
 
-const Name = z.string().trim().min(1, 'Name is required');
-const Email = z.string().trim().email('Wrong email format').transform(v => v.toLowerCase()).min(3, 'Email is required');
-const Password = z.string().trim().min(1, 'Password is required');
+const Name = zod.string().trim().min(1, 'Name is required');
+const Email = zod.string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Wrong email format")
+    .transform((value) => (value).toLowerCase());
+const Password = zod.string().trim().min(1, 'Password is required');
 
-const userSchema = z.object({
-    name: Name,
-    email: Email,
-    password: Password,
-});
+const Id = zod.coerce.number().int().positive().finite();
 
-const Id = z.coerce.number().int().positive();
-
-const IdsSchema = z
+const Ids = zod
     .array(Id)
     .nonempty("Need to pass at least one id")
-    .refine(arr => new Set(arr).size === arr.length, "ID must be unique");
+    .refine((arr) => new Set(arr).size === arr.length, "ID must be unique");
 
-const StatusEnum = z.enum(["ACTIVE", "BLOCKED", "UNVERIFIED"]);
+const StatusEnum = zod.enum(["ACTIVE", "BLOCKED", "UNVERIFIED"]);
 
-const LoginSchema = z.object({
+const LoginSchema = zod.object({
     email: Email,
     password: Password,
 });
 
-const RegisterSchema = z.object({
+const RegisterSchema = zod.object({
     name: Name,
     email: Email,
     password: Password,
 });
 
-const DeleteManySchema = z.object({
-    ids: IdsSchema,
+const DeleteManySchema = zod.object({
+    ids: Ids,
 });
 
-const UpdateStatusManySchema = z.object({
-    ids: IdsSchema,
+const UpdateStatusManySchema = zod.object({
+    ids: Ids,
     status: StatusEnum,
 });
 
-exports.userSchema = userSchema;
-exports.Id = Id;
-exports.IdsArray = IdsSchema;
-exports.StatusEnum = StatusEnum;
-exports.LoginSchema = LoginSchema;
-exports.RegisterSchema = RegisterSchema;
-exports.DeleteManySchema = DeleteManySchema;
-exports.UpdateStatusManySchema = UpdateStatusManySchema;
+module.exports = {
+    LoginSchema,
+    RegisterSchema,
+    DeleteManySchema,
+    UpdateStatusManySchema,
+};
