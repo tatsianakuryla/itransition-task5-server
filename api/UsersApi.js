@@ -8,8 +8,13 @@ const { Mailer } = require('../mailer/Mailer');
 class UsersApi {
     static getUsers = async (request, response) => {
         try {
+            const { sortBy = 'registrationTime', order = 'desc' } = request.query;
+            const allowedFields = ['name', 'email', 'status', 'registrationTime'];
+            const sortField = allowedFields.includes(sortBy) ? sortBy : 'registrationTime';
+            const sortOrder = order.toLowerCase() === 'asc' ? 'asc' : 'desc';
             const users = await prisma.user.findMany({
                 select: { name: true, email: true, status: true, id: true, registrationTime: true },
+                orderBy: { [sortField]: sortOrder }
             });
             response.json(users);
         } catch (error) {
@@ -99,7 +104,7 @@ class UsersApi {
             const { token } = request.params;
             const result = await TokensApi.verifyActivationToken(token);
             if (!result.valid) {
-                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+                const frontendUrl = process.env.FRONTEND_ACTIVATION_URL || 'http://localhost:3000';
                 return response.redirect(`${frontendUrl}/activation-failed?error=${encodeURIComponent(result.error)}`);
             }
             await prisma.user.update({
@@ -107,10 +112,10 @@ class UsersApi {
                 data: { status: 'ACTIVE' }
             });
             await TokensApi.markActivationTokenAsUsed(token);
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            const frontendUrl = process.env.FRONTEND_ACTIVATION_URL || 'http://localhost:3000';
             response.redirect(`${frontendUrl}/activation-success`);
         } catch (error) {
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            const frontendUrl = process.env.FRONTEND_ACTIVATION_URL || 'http://localhost:3000';
             response.redirect(`${frontendUrl}/activation-failed?error=${encodeURIComponent(error.message)}`);
         }
     }

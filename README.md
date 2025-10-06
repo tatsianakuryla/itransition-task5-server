@@ -262,12 +262,22 @@ Redirects to: `{FRONTEND_URL}/activation-failed?error={error_message}`
 
 🔒 **Authentication Required**
 
-Returns a list of all users.
+Returns a list of all users with optional sorting.
 
 #### Headers:
 ```
 Authorization: Bearer <access_token>
 ```
+
+#### Query Parameters (Optional):
+- `sortBy` - Field to sort by. Options: `name`, `email`, `status`, `registrationTime`. Default: `registrationTime`
+- `order` - Sort order. Options: `asc`, `desc`. Default: `desc`
+
+#### Examples:
+- `/users/` - Get all users sorted by registration time (newest first)
+- `/users/?sortBy=name&order=asc` - Sort by name alphabetically
+- `/users/?sortBy=email&order=desc` - Sort by email (Z to A)
+- `/users/?sortBy=status&order=asc` - Sort by status
 
 #### Success Response (200):
 ```json
