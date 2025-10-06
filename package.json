@@ -18,12 +18,15 @@
   "type": "commonjs",
   "dependencies": {
     "@prisma/client": "^6.16.3",
+    "bcryptjs": "^3.0.2",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "prisma": "^6.16.3",
+    "jsonwebtoken": "^9.0.2",
     "zod": "^4.1.11"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "prisma": "^6.16.3"
   }
 }
