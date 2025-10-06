@@ -1,4 +1,4 @@
-const { Hash } = require("../hash/Hash");
+const { Security } = require("../security/Security");
 const { UNIQUE_VALUE_ERROR_CODE } = require("../constants/constants");
 const { prisma } = require('../db');
 
@@ -24,7 +24,8 @@ class UsersApi {
             if (user.status === "BLOCKED") {
                 return response.status(403).json({ error: "The user is blocked" });
             }
-            if (user.password !== Hash.get(password)) {
+            const ok = await Security.verifyPassword(password, user.password);
+            if (!ok) {
                 return response.status(401).json({ error: "Invalid email or password" });
             }
             response.json({ message: 'Login successful' });
@@ -34,9 +35,9 @@ class UsersApi {
     }
 
     static register = async (request, response) => {
-        const { name, email, password } = request.body;
-        const passwordHash = Hash.get(password);
         try {
+            const { name, email, password } = request.body;
+            const passwordHash = await Security.hashPassword(password);
             const created = await prisma.user.create({
                 data: { name, email, password: passwordHash },
                 select: { name: true, email: true, registrationTime: true },
