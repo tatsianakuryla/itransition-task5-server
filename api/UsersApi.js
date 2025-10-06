@@ -2,6 +2,8 @@ const { Security } = require("../security/Security");
 const { UNIQUE_VALUE_ERROR_CODE } = require("../constants/constants");
 const { prisma } = require('../db');
 const { UsersTokenManager } = require('./UsersTokenManager');
+const { TokensApi } = require('./TokensApi');
+const { Mailer } = require('../mailer/Mailer');
 
 class UsersApi {
     static getUsers = async (request, response) => {
@@ -21,7 +23,6 @@ class UsersApi {
             const user = await prisma.user.findUnique({ where: { email } });
             if (!user) return response.status(401).json({ error: "Invalid email or password" });
             if (user.status === "BLOCKED") return response.status(403).json({ error: "The user is blocked" });
-            if (user.status === "UNVERIFIED") return response.status(403).json({ error: "Email not verified" });
             const ok = await Security.verifyPassword(password, user.password);
             if (!ok) return response.status(401).json({ error: "Invalid email or password" });
             const { accessToken, refreshToken } = await UsersTokenManager.getTokens(user.id);
@@ -43,8 +44,15 @@ class UsersApi {
                 data: { name, email, password: passwordHash },
                 select: { id: true, name: true, email: true, status: true, registrationTime: true },
             });
+            const activationToken = await TokensApi.createActivationToken(user.id);
+            await Mailer.sendActivationEmail(user.email, user.name, activationToken);
             const { accessToken, refreshToken } = await UsersTokenManager.getTokens(user.id);
-            response.status(201).json({ user, accessToken, refreshToken });
+            response.status(201).json({ 
+                user, 
+                accessToken, 
+                refreshToken,
+                message: 'Registration successful. Please check your email to activate your account.'
+            });
         } catch (error) {
             if (error.code === UNIQUE_VALUE_ERROR_CODE) {
                 response.status(409).json({ error: 'User with such an email already exists' });
@@ -83,6 +91,27 @@ class UsersApi {
             response.json({ message: 'Successfully updated', count });
         } catch (error) {
             response.status(500).json({ error: error.message });
+        }
+    }
+
+    static activateAccount = async (request, response) => {
+        try {
+            const { token } = request.params;
+            const result = await TokensApi.verifyActivationToken(token);
+            if (!result.valid) {
+                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+                return response.redirect(`${frontendUrl}/activation-failed?error=${encodeURIComponent(result.error)}`);
+            }
+            await prisma.user.update({
+                where: { id: result.userId },
+                data: { status: 'ACTIVE' }
+            });
+            await TokensApi.markActivationTokenAsUsed(token);
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            response.redirect(`${frontendUrl}/activation-success`);
+        } catch (error) {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            response.redirect(`${frontendUrl}/activation-failed?error=${encodeURIComponent(error.message)}`);
         }
     }
 }

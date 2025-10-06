@@ -14,6 +14,7 @@ const { authenticate } = require('../middlewares/authenticate');
 usersRouter.post('/login', validate(LoginSchema), UsersApi.login);
 usersRouter.post('/register', validate(RegisterSchema), UsersApi.register);
 usersRouter.post('/refresh', validate(RefreshSchema), AuthApi.refresh);
+usersRouter.get('/activate/:token', UsersApi.activateAccount);
 usersRouter.get('/', authenticate, UsersApi.getUsers);
 usersRouter.delete('/', authenticate, validate(DeleteManySchema), UsersApi.deleteMany);
 usersRouter.patch('/', authenticate, validate(UpdateStatusManySchema), UsersApi.updateStatusMany);
