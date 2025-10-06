@@ -6,4 +6,4 @@ class Hash {
     }
 }
 
-exports.Hash = Hash;
+module.exports = { Hash };

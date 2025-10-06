@@ -1,12 +1,13 @@
-const { PrismaClient } = require('@prisma/client');
-const { Hash } = require("../hash/hash");
+const { Hash } = require("../hash/Hash");
 const { UNIQUE_VALUE_ERROR_CODE } = require("../constants/constants");
-const prisma = new PrismaClient();
+const { prisma } = require('../db');
 
 class UsersApi {
     static getUsers = async (request, response) => {
         try {
-            const users = await prisma.user.findMany();
+            const users = await prisma.user.findMany({
+                select: { name: true, email: true, status: true, id: true, registrationTime: true },
+            });
             response.json(users);
         } catch (error) {
             response.status(500).json({ error: error.message });
@@ -17,11 +18,14 @@ class UsersApi {
         try {
             const { email, password } = request.body;
             const user = await prisma.user.findUnique({ where: { email } });
-            if (user.status === "BLOCKED") {
-                return response.status(401).json({ error: 'User is blocked' });
+            if (!user) {
+                return response.status(401).json({ error: "Invalid email or password" });
             }
-            if (!user || user.password !== Hash.get(password)) {
-                return response.status(401).json({ error: 'Invalid email or password' });
+            if (user.status === "BLOCKED") {
+                return response.status(403).json({ error: "The user is blocked" });
+            }
+            if (user.password !== Hash.get(password)) {
+                return response.status(401).json({ error: "Invalid email or password" });
             }
             response.json({ message: 'Login successful' });
         } catch (error) {
@@ -29,18 +33,15 @@ class UsersApi {
         }
     }
 
-    static create = async (request, response) => {
+    static register = async (request, response) => {
         const { name, email, password } = request.body;
         const passwordHash = Hash.get(password);
         try {
-            const register = await prisma.user.create({
-                data: {
-                    name,
-                    email,
-                    password: passwordHash
-                }
+            const created = await prisma.user.create({
+                data: { name, email, password: passwordHash },
+                select: { name: true, email: true, registrationTime: true },
             });
-            response.json(register);
+            response.status(201).json(created);
         } catch (error) {
             if (error.code === UNIQUE_VALUE_ERROR_CODE) {
                 response.status(409).json({ error: 'User with such an email already exists' });
@@ -53,8 +54,8 @@ class UsersApi {
     static deleteMany = async (request, response) => {
         try {
             const { ids } = request.body;
-            const count = await prisma.user.deleteMany({ where: { id: { in: ids } } });
-            response.json({ message: 'Users was successfully deleted', count: count.count });
+            const { count } = await prisma.user.deleteMany({ where: { id: { in: ids } } });
+            response.json({ message: 'Successfully deleted', count });
         } catch (error) {
             response.status(500).json({ error: error.message });
         }
@@ -62,8 +63,8 @@ class UsersApi {
 
     static deleteManyUnverified = async (request, response) => {
         try {
-            const count = await prisma.user.deleteMany({ where: { status: "UNVERIFIED" } });
-            response.json({ message: 'Users was successfully deleted', count: count.count });
+            const { count } = await prisma.user.deleteMany({ where: { status: "UNVERIFIED" } });
+            response.json({ message: 'Successfully deleted', count });
         } catch (error) {
             response.status(500).json({ error: error.message });
         }
@@ -72,15 +73,15 @@ class UsersApi {
     static updateStatusMany = async (request, response) => {
         try {
             const { ids, status } = request.body;
-            const update = await prisma.user.updateMany({
+            const { count } = await prisma.user.updateMany({
                 where: { id: { in: ids } },
                 data: { status },
             });
-            response.json(update);
+            response.json({ message: 'Successfully updated', count });
         } catch (error) {
             response.status(500).json({ error: error.message });
         }
     }
 }
 
-exports.Api = UsersApi;
+module.exports = { UsersApi };
