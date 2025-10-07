@@ -7,7 +7,9 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "start": "nodemon src/app.js",
+    "dev": "nodemon src/app.js",
+    "start": "node src/app.js",
+    "build": "echo \"no build step\"",
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
     "test": "echo \"Error: no test specified\" && exit 1"
