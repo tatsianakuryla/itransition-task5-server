@@ -6,6 +6,22 @@ const { TokensController } = require('./tokens.controller');
 const { Mailer } = require('../infra/mailer/mailer');
 
 class UsersController {
+    static getCurrentUser = async (request, response) => {
+        try {
+            const userId = Number(request.userId);
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { id: true, name: true, email: true, status: true, registrationTime: true }
+            });
+            if (!user) {
+                return response.status(404).json({ error: 'User not found' });
+            }
+            response.json(user);
+        } catch (error) {
+            response.status(500).json({ error: error.message });
+        }
+    }
+
     static getUsers = async (request, response) => {
         try {
             const { sortBy = 'registrationTime', order = 'desc' } = request.query;

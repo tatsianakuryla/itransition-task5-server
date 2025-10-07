@@ -15,6 +15,7 @@ usersRouter.post('/login', validate(LoginSchema), UsersController.login);
 usersRouter.post('/register', validate(RegisterSchema), UsersController.register);
 usersRouter.post('/refresh', validate(RefreshSchema), AuthController.refresh);
 usersRouter.get('/activate/:token', UsersController.activateAccount);
+usersRouter.get('/me', authenticate, UsersController.getCurrentUser);
 usersRouter.get('/', authenticate, UsersController.getUsers);
 usersRouter.delete('/', authenticate, validate(DeleteManySchema), UsersController.deleteMany);
 usersRouter.patch('/', authenticate, validate(UpdateStatusManySchema), UsersController.updateStatusMany);
