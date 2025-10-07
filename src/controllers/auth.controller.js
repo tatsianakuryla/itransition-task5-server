@@ -1,13 +1,13 @@
-const { TokensApi } = require('./TokensApi');
-const { UsersTokenManager } = require('./UsersTokenManager');
+const { TokensController } = require('./tokens.controller');
+const { UsersTokenManager } = require('../security/jwt');
 
-class AuthApi {
+class AuthController {
     static async logout(request, response) {
         const { refreshToken } = request.body || {};
         if (!refreshToken) return response.status(400).json({ error: 'Refresh token is required' });
         try {
-            const { jti } = TokensApi.verifyRefreshToken(refreshToken);
-            await TokensApi.revokeRefreshToken(jti);
+            const { jti } = TokensController.verifyRefreshToken(refreshToken);
+            await TokensController.revokeRefreshToken(jti);
         } catch {}
         return response.status(204).send();
     }
@@ -16,10 +16,10 @@ class AuthApi {
         const { refreshToken } = request.body || {};
         if (!refreshToken) return response.status(400).json({ error: 'Refresh token is required' });
         try {
-            const { sub, jti } = TokensApi.verifyRefreshToken(refreshToken);
-            const ok = await TokensApi.isRefreshTokenValid(jti);
+            const { sub, jti } = TokensController.verifyRefreshToken(refreshToken);
+            const ok = await TokensController.isRefreshTokenValid(jti);
             if (!ok) return response.status(401).json({ error: 'Invalid or revoked refresh token' });
-            await TokensApi.revokeRefreshToken(jti);
+            await TokensController.revokeRefreshToken(jti);
             const { accessToken, refreshToken: newRefreshToken } = await UsersTokenManager.getTokens(Number(sub));
             return response.json({ accessToken, refreshToken: newRefreshToken });
         } catch {
@@ -28,4 +28,4 @@ class AuthApi {
     }
 }
 
-module.exports = { AuthApi };
+module.exports = { AuthController };

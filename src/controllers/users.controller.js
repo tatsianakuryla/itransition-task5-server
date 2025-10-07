@@ -1,11 +1,11 @@
-const { Security } = require("../security/Security");
-const { UNIQUE_VALUE_ERROR_CODE } = require("../constants/constants");
-const { prisma } = require('../db');
-const { UsersTokenManager } = require('./UsersTokenManager');
-const { TokensApi } = require('./TokensApi');
-const { Mailer } = require('../mailer/Mailer');
+const { Security } = require("../security/hash");
+const { UNIQUE_VALUE_ERROR_CODE } = require("../shared/constants/constants");
+const { prisma } = require('../db/db');
+const { UsersTokenManager } = require('../security/jwt');
+const { TokensController } = require('./tokens.controller');
+const { Mailer } = require('../infra/mailer/mailer');
 
-class UsersApi {
+class UsersController {
     static getUsers = async (request, response) => {
         try {
             const { sortBy = 'registrationTime', order = 'desc' } = request.query;
@@ -49,7 +49,7 @@ class UsersApi {
                 data: { name, email, password: passwordHash },
                 select: { id: true, name: true, email: true, status: true, registrationTime: true },
             });
-            const activationToken = await TokensApi.createActivationToken(user.id);
+            const activationToken = await TokensController.createActivationToken(user.id);
             await Mailer.sendActivationEmail(user.email, user.name, activationToken);
             const { accessToken, refreshToken } = await UsersTokenManager.getTokens(user.id);
             response.status(201).json({ 
@@ -89,6 +89,11 @@ class UsersApi {
     static updateStatusMany = async (request, response) => {
         try {
             const { ids, status } = request.body;
+            if (status === 'BLOCKED') {
+                for (const id of ids) {
+                    await TokensController.revokeAllUserRefreshTokens(id);
+                }
+            }
             const { count } = await prisma.user.updateMany({
                 where: { id: { in: ids } },
                 data: { status },
@@ -100,25 +105,23 @@ class UsersApi {
     }
 
     static activateAccount = async (request, response) => {
+        const frontendUrl = process.env.FRONTEND_ACTIVATION_URL || 'http://localhost:3000';
         try {
             const { token } = request.params;
-            const result = await TokensApi.verifyActivationToken(token);
+            const result = await TokensController.verifyActivationToken(token);
             if (!result.valid) {
-                const frontendUrl = process.env.FRONTEND_ACTIVATION_URL || 'http://localhost:3000';
                 return response.redirect(`${frontendUrl}/activation-failed?error=${encodeURIComponent(result.error)}`);
             }
             await prisma.user.update({
                 where: { id: result.userId },
                 data: { status: 'ACTIVE' }
             });
-            await TokensApi.markActivationTokenAsUsed(token);
-            const frontendUrl = process.env.FRONTEND_ACTIVATION_URL || 'http://localhost:3000';
+            await TokensController.markActivationTokenAsUsed(token);
             response.redirect(`${frontendUrl}/activation-success`);
         } catch (error) {
-            const frontendUrl = process.env.FRONTEND_ACTIVATION_URL || 'http://localhost:3000';
             response.redirect(`${frontendUrl}/activation-failed?error=${encodeURIComponent(error.message)}`);
         }
     }
 }
 
-module.exports = { UsersApi };
+module.exports = { UsersController };

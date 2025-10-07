@@ -30,7 +30,7 @@ model ActivationToken {
   id        Int       @id @default(autoincrement())
   token     String    @unique
   userId    Int       @map("user_id")
-  user      User      @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now()) @map("created_at")
   expiresAt DateTime  @map("expires_at")
   usedAt    DateTime? @map("used_at")
@@ -42,7 +42,7 @@ model RefreshToken {
   id        Int      @id @default(autoincrement())
   jti       String   @unique
   userId    Int      @map("user_id")
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime @map("expires_at")
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")

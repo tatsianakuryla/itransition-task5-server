@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken");
 const { add } = require('date-fns');
 const { randomUUID } = require('node:crypto');
-const { prisma } = require('../db');
+const { prisma } = require('../db/db');
 
-class TokensApi {
+class TokensController {
     static #UNIT_MAP = {
         s: 'seconds',
         m: 'minutes',
@@ -121,4 +121,4 @@ class TokensApi {
     }
 }
 
-module.exports = { TokensApi };
+module.exports = { TokensController };

@@ -1,4 +1,4 @@
-const { TokensApi } = require('../api/TokensApi');
+const { TokensController } = require('../../controllers/tokens.controller');
 
 const authenticate = (request, response, next) => {
     const authHeader = request.headers.authorization;
@@ -7,7 +7,7 @@ const authenticate = (request, response, next) => {
     }
     const token = authHeader.substring(7);
     try {
-        const { sub } = TokensApi.verifyAccessToken(token);
+        const { sub } = TokensController.verifyAccessToken(token);
         request.userId = sub;
         next();
     } catch {

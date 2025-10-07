@@ -1,8 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const { usersRouter } = require('./router/users.router');
-const { prisma } = require('./db');
-const {request} = require("express");
+const { prisma } = require('./db/db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;

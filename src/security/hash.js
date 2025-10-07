@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 
-class Security {
+class Hash {
     static async hashPassword(plain) {
         const salt = await bcrypt.genSalt(12);
         return bcrypt.hash(plain, salt);
@@ -11,4 +11,4 @@ class Security {
     }
 }
 
-module.exports = { Security };
+module.exports = { Security: Hash };
