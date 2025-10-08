@@ -7,19 +7,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserStatus {
-  UNVERIFIED
-  ACTIVE
-  BLOCKED
-}
-
 model User {
-  id               Int            @id @default(autoincrement())
+  id               Int               @id @default(autoincrement())
   name             String
-  email            String         @unique
+  email            String            @unique
   password         String
-  status           UserStatus     @default(UNVERIFIED)
-  registrationTime DateTime       @default(now()) @map("registration_time")
+  status           UserStatus        @default(UNVERIFIED)
+  registrationTime DateTime          @default(now()) @map("registration_time")
+  lastLoginTime    DateTime          @default(now()) @map("last_login_time")
   activationTokens ActivationToken[]
   refreshTokens    RefreshToken[]
 
@@ -30,10 +25,10 @@ model ActivationToken {
   id        Int       @id @default(autoincrement())
   token     String    @unique
   userId    Int       @map("user_id")
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now()) @map("created_at")
   expiresAt DateTime  @map("expires_at")
   usedAt    DateTime? @map("used_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("activation_tokens")
 }
@@ -42,10 +37,16 @@ model RefreshToken {
   id        Int      @id @default(autoincrement())
   jti       String   @unique
   userId    Int      @map("user_id")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime @map("expires_at")
   revoked   Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
+}
+
+enum UserStatus {
+  UNVERIFIED
+  ACTIVE
+  BLOCKED
 }

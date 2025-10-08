@@ -25,11 +25,11 @@ class UsersController {
     static getUsers = async (request, response) => {
         try {
             const { sortBy = 'registrationTime', order = 'desc' } = request.query;
-            const allowedFields = ['name', 'email', 'status', 'registrationTime'];
+            const allowedFields = ['name', 'email', 'status', 'registrationTime', 'lastLoginTime'];
             const sortField = allowedFields.includes(sortBy) ? sortBy : 'registrationTime';
             const sortOrder = order.toLowerCase() === 'asc' ? 'asc' : 'desc';
             const users = await prisma.user.findMany({
-                select: { name: true, email: true, status: true, id: true, registrationTime: true },
+                select: { name: true, email: true, status: true, id: true, registrationTime: true, lastLoginTime: true },
                 orderBy: { [sortField]: sortOrder }
             });
             response.json(users);
@@ -46,6 +46,12 @@ class UsersController {
             if (user.status === "BLOCKED") return response.status(403).json({ error: "The user is blocked" });
             const ok = await Security.verifyPassword(password, user.password);
             if (!ok) return response.status(401).json({ error: "Invalid email or password" });
+
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { lastLoginTime: new Date() }
+            });
+            
             const { accessToken, refreshToken } = await UsersTokenManager.getTokens(user.id);
             response.json({
                 user: { id: user.id, name: user.name, email: user.email, status: user.status },
