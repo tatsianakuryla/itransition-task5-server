@@ -1,5 +1,11 @@
 const { TokensController } = require('../../controllers/tokens.controller');
 
+/**
+ * Authentication middleware that only validates JWT token.
+ * Does NOT check if user exists or is blocked in database.
+ * Used for logout endpoint where database check is unnecessary.
+ *
+ */
 const authenticateToken = (request, response, next) => {
     const authHeader = request.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
